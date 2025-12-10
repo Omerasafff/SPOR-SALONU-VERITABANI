@@ -1,0 +1,159 @@
+SQL TABLONUN KODLARI 
+-- 1. KISILER (BASE TABLE)
+CREATE TABLE Kisiler (
+    kisi_id SERIAL PRIMARY KEY,
+    ad VARCHAR(50) NOT NULL,
+    soyad VARCHAR(50) NOT NULL,
+    tc_no CHAR(11) UNIQUE NOT NULL,
+    telefon VARCHAR(15),
+    email VARCHAR(100),
+    cinsiyet CHAR(1)
+);
+
+-- 2. UYELER
+CREATE TABLE Uyeler (
+    uye_id SERIAL PRIMARY KEY,
+    uyelik_baslangic DATE DEFAULT CURRENT_DATE,
+    kalan_hak INT DEFAULT 0,
+    aktiflik_durumu BOOLEAN DEFAULT TRUE
+) INHERITS (Kisiler);
+
+-- 3. PERSONEL
+CREATE TABLE Personel (
+    personel_id SERIAL PRIMARY KEY,
+    maas DECIMAL(10, 2),
+    pozisyon VARCHAR(50), 
+    ise_giris_tarihi DATE DEFAULT CURRENT_DATE
+) INHERITS (Kisiler);
+
+-- 4. VARDIYALAR (DÜZELTİLDİ: TC yerine ID kullanıldı)
+CREATE TABLE Vardiyalar (
+    vardiya_id SERIAL PRIMARY KEY,
+    personel_id INT REFERENCES Personel(personel_id), -- Hata buradaydı, ID'ye çevirdik düzeldi
+    gun VARCHAR(15),
+    baslangic_saati TIME,
+    bitis_saati TIME
+);
+
+-- 5. UYELIK PAKETLERI
+CREATE TABLE UyelikPaketleri (
+    paket_id SERIAL PRIMARY KEY,
+    paket_adi VARCHAR(50) NOT NULL,
+    sure_ay INT NOT NULL,
+    fiyat DECIMAL(10, 2) NOT NULL
+);
+
+-- 6. ODEMELER
+CREATE TABLE Odemeler (
+    odeme_id SERIAL PRIMARY KEY,
+    uye_id INT REFERENCES Uyeler(uye_id),
+    tutar DECIMAL(10, 2) NOT NULL,
+    odeme_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    odeme_turu VARCHAR(20)
+);
+
+-- 7. VUCUT OLCUMLERI
+CREATE TABLE VucutOlcumleri (
+    olcum_id SERIAL PRIMARY KEY,
+    uye_id INT REFERENCES Uyeler(uye_id),
+    tarih DATE DEFAULT CURRENT_DATE,
+    kilo DECIMAL(5, 2),
+    boy DECIMAL(5, 2),
+    yag_orani DECIMAL(5, 2),
+    kas_orani DECIMAL(5, 2)
+);
+
+-- 8. EKIPMANLAR
+CREATE TABLE Ekipmanlar (
+    ekipman_id SERIAL PRIMARY KEY,
+    ad VARCHAR(100) NOT NULL,
+    marka VARCHAR(50),
+    adet INT DEFAULT 1,
+    alim_tarihi DATE,
+    bakim_periyodu_ay INT
+);
+
+-- 9. BAKIM KAYITLARI
+CREATE TABLE BakimKayitlari (
+    bakim_id SERIAL PRIMARY KEY,
+    ekipman_id INT REFERENCES Ekipmanlar(ekipman_id),
+    bakim_tarihi DATE DEFAULT CURRENT_DATE,
+    aciklama TEXT,
+    maliyet DECIMAL(10, 2)
+);
+
+-- 10. DOLAPLAR
+CREATE TABLE Dolaplar (
+    dolap_id SERIAL PRIMARY KEY,
+    dolap_no INT NOT NULL,
+    konum VARCHAR(20),
+    durum VARCHAR(20) DEFAULT 'Boş'
+);
+
+-- 11. DOLAP KIRALAMA
+CREATE TABLE DolapKiralama (
+    kira_id SERIAL PRIMARY KEY,
+    uye_id INT REFERENCES Uyeler(uye_id),
+    dolap_id INT REFERENCES Dolaplar(dolap_id),
+    baslangic_tarihi DATE,
+    bitis_tarihi DATE
+);
+
+-- 12. DERS TANIMLARI
+CREATE TABLE DersTanimlari (
+    ders_tanim_id SERIAL PRIMARY KEY,
+    ders_adi VARCHAR(50) NOT NULL,
+    zorluk_seviyesi VARCHAR(20)
+);
+
+-- 13. DERS PROGRAMI (DÜZELTİLDİ: TC yerine ID kullanıldı)
+CREATE TABLE DersProgrami (
+    program_id SERIAL PRIMARY KEY,
+    ders_tanim_id INT REFERENCES DersTanimlari(ders_tanim_id),
+    egitmen_id INT REFERENCES Personel(personel_id), -- Hata buradaydı, ID'ye çevirdik düzeldi
+    gun VARCHAR(15),
+    saat TIME,
+    kontenjan INT DEFAULT 20
+);
+
+-- 14. DERS KAYITLARI
+CREATE TABLE DersKayitlari (
+    kayit_id SERIAL PRIMARY KEY,
+    program_id INT REFERENCES DersProgrami(program_id),
+    uye_id INT REFERENCES Uyeler(uye_id),
+    kayit_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. URUNLER
+CREATE TABLE Urunler (
+    urun_id SERIAL PRIMARY KEY,
+    urun_adi VARCHAR(100) NOT NULL,
+    barkod VARCHAR(50) UNIQUE NOT NULL,
+    satis_fiyati DECIMAL(10, 2),
+    stok_adedi INT DEFAULT 0
+);
+
+-- 16. SATISLAR
+CREATE TABLE Satislar (
+    satis_id SERIAL PRIMARY KEY,
+    uye_id INT REFERENCES Uyeler(uye_id),
+    satis_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    toplam_tutar DECIMAL(10, 2)
+);
+
+-- 17. SATIS DETAYLARI
+CREATE TABLE SatisDetaylari (
+    detay_id SERIAL PRIMARY KEY,
+    satis_id INT REFERENCES Satislar(satis_id),
+    urun_id INT REFERENCES Urunler(urun_id),
+    adet INT NOT NULL,
+    birim_fiyat DECIMAL(10, 2)
+);
+
+-- LOG TABLOSU
+CREATE TABLE IslemLoglari (
+    log_id SERIAL PRIMARY KEY,
+    islem_tipi VARCHAR(50),
+    aciklama TEXT,
+    islem_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
