@@ -1,0 +1,265 @@
+----------------------------------------------------------------------------------
+          -- 1. TETIKLEYICI: STOK DUSURME
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_stok_dusur() RETURNS TRIGGER AS $$
+BEGIN 
+    UPDATE Urunler 
+    SET stok_adedi = stok_adedi - NEW.adet
+    WHERE urun_id = NEW.urun_id;
+    
+    RETURN NEW; 
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER t_stok_dusur
+AFTER INSERT ON SatisDetaylari
+FOR EACH ROW
+EXECUTE FUNCTION f_stok_dusur();
+
+
+----------------------------------------------------------------------------------
+       -- 2. TETIKLEYICI: KONTENJAN KONTROLU
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_kontenjan_kontrolu() RETURNS TRIGGER AS $$
+DECLARE 
+    mevcut_kısı INT;
+    kapasıte INT;
+BEGIN
+    -- Derse kayıtlı kişi sayısını buluyoruz
+    SELECT count(*) INTO mevcut_kısı FROM DersKayitlari WHERE program_id = NEW.program_id;
+    -- Dersin kapasitesini buluyoruz
+    SELECT kontenjan INTO kapasıte FROM DersProgrami WHERE program_id = NEW.program_id;
+    
+    IF mevcut_kısı >= kapasıte THEN
+        RAISE EXCEPTION 'KAYIT BASARISIZ!!! BU DERSIN KONTENJANI DOLMUSTUR!!!';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER t_kontenjan_kontrolu
+BEFORE INSERT ON DersKayitlari
+FOR EACH ROW
+EXECUTE FUNCTION f_kontenjan_kontrolu();
+
+
+----------------------------------------------------------------------------------
+                        -- 3. TETIKLEYICI: UYE AKTIFLESTIRME
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_uye_aktıflestır() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Uyeler 
+    SET aktiflik_durumu = TRUE ,
+    son_odeme_tarihi= CURRENT_DATE,
+    guncel_borc = guncel_borc - NEW.tutar
+    WHERE uye_id = NEW.uye_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER t_uye_aktıflestır 
+AFTER INSERT ON Odemeler 
+FOR EACH ROW 
+EXECUTE FUNCTION f_uye_aktıflestır();
+
+
+----------------------------------------------------------------------------------                    -- 4. TETIKLEYICI: HOCA CAKISMA KONTROLU                                         
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_dersler_cakısıyormu()
+RETURNS TRIGGER AS $$ 
+DECLARE 
+    cakısma_kontrolu INT;
+BEGIN 
+    SELECT COUNT(*) INTO cakısma_kontrolu
+    FROM DersProgrami 
+    WHERE egitmen_id = NEW.egitmen_id
+    AND gun = NEW.gun
+    AND saat = NEW.saat;
+    
+    IF cakısma_kontrolu > 0 THEN 
+        RAISE EXCEPTION 'BU EGITMENIN BELIRTILEN GUN VE SAATTE BASKA DERSI VARDIR!!!';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER t_dersler_cakısıyormu
+BEFORE INSERT ON DersProgrami
+FOR EACH ROW 
+EXECUTE FUNCTION f_dersler_cakısıyormu();
+----------------------------------------------------------------------------------                    -- 5.TETIKLEYICI: EKIPMAN KONTROLU                                         
+----------------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION f_PasifUyeEkipmanKullanamaz()
+RETURNS TRIGGER AS $$
+DECLARE
+    durum BOOLEAN;
+BEGIN
+    
+    SELECT aktiflik_durumu INTO durum 
+    FROM Uyeler 
+    WHERE uye_id = NEW.uye_id;
+
+    
+    IF durum = FALSE THEN
+        RAISE EXCEPTION 'HATA: Üyeliğiniz PASİF durumdadır! Ekipman kullanamazsınız. Lütfen yönetime danışınız.';    
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER t_PasifUyeEkipmanKullanamaz
+BEFORE INSERT ON EkipmanKullanim
+FOR EACH ROW
+EXECUTE FUNCTION f_PasifUyeEkipmanKullanamaz();
+
+----------------------------------------------------------------------------------
+                -- FONKSIYON 1: VUCUT KITLE INDEKSI HESAPLAMA
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_bmı_hesabı(f_uye_id INT)
+RETURNS VARCHAR 
+LANGUAGE plpgsql
+AS $$ 
+DECLARE 
+    v_boy DECIMAL;
+    v_kilo DECIMAL;
+    v_bmi DECIMAL; 
+BEGIN 
+    SELECT boy, kilo INTO v_boy, v_kilo 
+    FROM VucutOlcumleri
+    WHERE uye_id = f_uye_id
+    ORDER BY tarih DESC LIMIT 1;
+
+    IF v_boy IS NULL OR v_boy = 0 THEN 
+        RETURN 'OLCUM YOK!!!'; 
+    END IF;
+
+    -- Düzeltme: Atama işlemi := ile yapılır
+    v_bmi := v_kilo / (v_boy * v_boy); 
+
+    IF v_bmi < 18.5 THEN RETURN 'ZAYIF';
+    ELSIF v_bmi < 25 THEN RETURN 'NORMAL';
+    ELSIF v_bmi < 30 THEN RETURN 'KILOLU';
+    ELSE RETURN 'OBEZ';
+    END IF; 
+END;
+$$;
+
+
+----------------------------------------------------------------------------------
+                    -- FONKSIYON 2: KONTENJAN SORGULAMA
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_boskontenjan(p_program_id INT)
+RETURNS INT 
+LANGUAGE plpgsql
+AS $$ 
+DECLARE
+    v_kapasite INT;
+    v_kayıtlı INT;
+BEGIN 
+    SELECT kontenjan INTO v_kapasite FROM DersProgrami WHERE program_id = p_program_id;
+    SELECT count(*) INTO v_kayıtlı FROM DersKayitlari WHERE program_id = p_program_id; 
+    RETURN v_kapasite - v_kayıtlı;
+END;
+$$;
+
+
+----------------------------------------------------------------------------------
+                 -- FONKSIYON 3: BORCLU UYELERI SORGULAMA
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_BorcluUyeleriGetir(p_limit DECIMAL)
+RETURNS TABLE (uye_id INT, ad VARCHAR, soyad VARCHAR, borc DECIMAL)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY 
+    SELECT u.uye_id, u.ad, u.soyad, u.guncel_borc
+    FROM Uyeler u
+    WHERE u.guncel_borc > p_limit
+    ORDER BY u.guncel_borc DESC;
+END;
+$$;
+
+
+----------------------------------------------------------------------------------
+                        -- FONKSIYON 4: CIRO HESAPLAMA
+----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION f_CiroHesapla(
+    p_baslangic DATE, 
+    p_bitis DATE
+)
+RETURNS DECIMAL(10, 2)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    toplam_aidat DECIMAL(10, 2);
+    toplam_market DECIMAL(10, 2);
+BEGIN
+    SELECT SUM(tutar) INTO toplam_aidat 
+    FROM Odemeler 
+    WHERE odeme_tarihi BETWEEN p_baslangic AND p_bitis;
+    
+    IF toplam_aidat IS NULL THEN
+        toplam_aidat := 0; 
+    END IF;
+
+    SELECT SUM(toplam_tutar) INTO toplam_market 
+    FROM Satislar 
+    WHERE satis_tarihi BETWEEN p_baslangic AND p_bitis;
+    
+    IF toplam_market IS NULL THEN
+        toplam_market := 0;
+    END IF;
+    
+    RETURN toplam_aidat + toplam_market;
+END;
+$$;
+-------------------------------------------------------------------------------------------
+                     --1. SAKLI YORDAM YENİ ÜYE EKLEME
+------------------------------------------------------------------------------------------- 
+CREATE OR REPLACE PROCEDURE s_uye_ekle(
+p_ad VARCHAR, 
+    p_soyad VARCHAR, 
+    p_tc VARCHAR, 
+    p_tel VARCHAR, 
+    p_email VARCHAR, 
+    p_cinsiyet CHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO Uyeler (ad, soyad, tc_no, telefon, email, cinsiyet, uyelik_baslangic, aktiflik_durumu)-- uye_ıd  serıal tanımladıgımız ıcın burda yazılmadı oto atıyor zaten.
+    VALUES (p_ad, p_soyad, p_tc, p_tel, p_email, p_cinsiyet, CURRENT_DATE, TRUE);
+END;
+$$;
+-------------------------------------------------------------------------------------------
+                     --2. SAKLI YORDAM  ÜYE SİLME 
+-------------------------------------------------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE s_uye_sil(p_uye_id INT )
+LANGUAGE plpgsql
+AS $$
+BEGIN 
+DELETE FROM derskayitlari WHERE uye_id=p_uye_id;
+DELETE FROM VucutOlcumleri WHERE uye_id = p_uye_id;
+    DELETE FROM DolapKiralama WHERE uye_id = p_uye_id;
+     DELETE FROM Uyeler WHERE uye_id = p_uye_id; -- uyenın verıtabanında olan kayıtlarını sılıyoruzkı once hata vermesın sıstem. ılerde lazım olabılır dıye odemelerde veya satıslarda eger bırkaydı varsa ona dokunmuyoruz.
+     END;
+     $$; 
+     -------------------------------------------------------------------------------------------
+                     --3. SAKLI YORDAM BORCU GECIKENLERI UYELIGINI PASIF YAPMA   
+-------------------------------------------------------------------------------------------
+    
+    
+CREATE OR REPLACE PROCEDURE s_gecıkmısodeme()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+UPDATE uyeler 
+SET aktiflik_durumu= FALSE --odeme gecıktıyse uyelıgını pasıfe cevırdık.
+WHERE guncel_borc > 0              -- 1. Kural: Borcu olacak
+      AND (CURRENT_DATE - son_odeme_tarihi) > 15; --  Son ödemeden 15 gün geçmişse uygulanacak.
+END;
+$$;
