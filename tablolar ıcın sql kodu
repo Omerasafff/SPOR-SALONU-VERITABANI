@@ -15,7 +15,9 @@ CREATE TABLE Uyeler (
     uye_id SERIAL PRIMARY KEY,
     uyelik_baslangic DATE DEFAULT CURRENT_DATE,
     kalan_hak INT DEFAULT 0,
-    aktiflik_durumu BOOLEAN DEFAULT TRUE
+ guncel_borc DECIMAL(10, 2) DEFAULT 0,
+ son_odeme_tarihi DATE;
+aktiflik_durumu BOOLEAN DEFAULT TRUE
 ) INHERITS (Kisiler);
 
 -- 3. PERSONEL
@@ -149,7 +151,13 @@ CREATE TABLE SatisDetaylari (
     adet INT NOT NULL,
     birim_fiyat DECIMAL(10, 2)
 );
-
+18. Ekipman Kullanımı
+CREATE TABLE EkipmanKullanim (
+    kullanim_id SERIAL PRIMARY KEY,
+    uye_id INT REFERENCES Uyeler(uye_id),
+    ekipman_id INT REFERENCES Ekipmanlar(ekipman_id),
+    baslangic_saati TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    bitis_saati TIMESTAMP
 -- LOG TABLOSU
 CREATE TABLE IslemLoglari (
     log_id SERIAL PRIMARY KEY,
