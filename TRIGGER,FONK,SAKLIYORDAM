@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
-          -- 1. TETIKLEYICI: STOK DUSURME
+-- 1. TETIKLEYICI: STOK DUSURME 
 ----------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION f_stok_dusur() RETURNS TRIGGER AS $$
 BEGIN 
@@ -18,19 +18,19 @@ EXECUTE FUNCTION f_stok_dusur();
 
 
 ----------------------------------------------------------------------------------
-       -- 2. TETIKLEYICI: KONTENJAN KONTROLU
+-- 2. TETIKLEYICI: KONTENJAN KONTROLU
 ----------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION f_kontenjan_kontrolu() RETURNS TRIGGER AS $$
 DECLARE 
-    mevcut_kısı INT;
-    kapasıte INT;
+    mevcut_kisi INT;
+    kapasite INT;
 BEGIN
     -- Derse kayıtlı kişi sayısını buluyoruz
-    SELECT count(*) INTO mevcut_kısı FROM DersKayitlari WHERE program_id = NEW.program_id;
+    SELECT count(*) INTO mevcut_kisi FROM DersKayitlari WHERE program_id = NEW.program_id;
     -- Dersin kapasitesini buluyoruz
-    SELECT kontenjan INTO kapasıte FROM DersProgrami WHERE program_id = NEW.program_id;
+    SELECT kontenjan INTO kapasite FROM DersProgrami WHERE program_id = NEW.program_id;
     
-    IF mevcut_kısı >= kapasıte THEN
+    IF mevcut_kisi >= kapasite THEN
         RAISE EXCEPTION 'KAYIT BASARISIZ!!! BU DERSIN KONTENJANI DOLMUSTUR!!!';
     END IF;
     
@@ -45,9 +45,9 @@ EXECUTE FUNCTION f_kontenjan_kontrolu();
 
 
 ----------------------------------------------------------------------------------
-                        -- 3. TETIKLEYICI: UYE AKTIFLESTIRME
+-- 3. TETIKLEYICI: UYE AKTIFLESTIRME
 ----------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION f_uye_aktıflestır() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION f_uye_aktiflestir() RETURNS TRIGGER AS $$
 BEGIN
     UPDATE Uyeler 
     SET aktiflik_durumu = TRUE,
@@ -60,27 +60,27 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER t_uye_aktıflestır 
+CREATE TRIGGER t_uye_aktiflestir 
 AFTER INSERT ON Odemeler 
 FOR EACH ROW 
-EXECUTE FUNCTION f_uye_aktıflestır();
+EXECUTE FUNCTION f_uye_aktiflestir();
 
 
-----------------------------------------------------------------------------------                    
-         -- 4. TETIKLEYICI: HOCA CAKISMA KONTROLU                                          
+----------------------------------------------------------------------------------                  
+-- 4. TETIKLEYICI: HOCA CAKISMA KONTROLU                                          
 ----------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION f_dersler_cakısıyormu()
+CREATE OR REPLACE FUNCTION f_dersler_cakisiyormu()
 RETURNS TRIGGER AS $$ 
 DECLARE 
-    cakısma_kontrolu INT;
+    cakisma_kontrolu INT;
 BEGIN 
-    SELECT COUNT(*) INTO cakısma_kontrolu
+    SELECT COUNT(*) INTO cakisma_kontrolu
     FROM DersProgrami 
     WHERE egitmen_id = NEW.egitmen_id
     AND gun = NEW.gun
     AND saat = NEW.saat;
     
-    IF cakısma_kontrolu > 0 THEN 
+    IF cakisma_kontrolu > 0 THEN 
         RAISE EXCEPTION 'BU EGITMENIN BELIRTILEN GUN VE SAATTE BASKA DERSI VARDIR!!!';
     END IF;
     
@@ -88,12 +88,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER t_dersler_cakısıyormu
+CREATE TRIGGER t_dersler_cakisiyormu
 BEFORE INSERT ON DersProgrami
 FOR EACH ROW 
-EXECUTE FUNCTION f_dersler_cakısıyormu();
+EXECUTE FUNCTION f_dersler_cakisiyormu();
 
-************************************6. TETIKLEYICI****************************************************************************************
+
+-- ************************************ 6. TETIKLEYICI ************************************
 CREATE OR REPLACE FUNCTION f_ekipman_kullanim_kontrol()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -116,13 +117,13 @@ BEGIN
         RAISE EXCEPTION 'UYARI: Borcu olan üyeler ekipman kullanamaz. Lütfen borcunuzu ödeyiniz.';
     END IF;
 
-   
+    -- Tablo ismi EkipmanKullanim olarak düzeltildi (sonundaki i silindi)
     SELECT COUNT(*)
     INTO v_kullanimda_adet
-    FROM EkipmanKullanimi
+    FROM EkipmanKullanim
     WHERE ekipman_id = NEW.ekipman_id AND bitis_saati IS NULL;
 
-   
+    
     SELECT adet INTO v_toplam_adet
     FROM Ekipmanlar
     WHERE ekipman_id = NEW.ekipman_id;
@@ -136,11 +137,14 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 CREATE TRIGGER t_ekipman_kullanim_kontrol
-BEFORE INSERT ON EkipmanKullanimi
+BEFORE INSERT ON EkipmanKullanim
 FOR EACH ROW
 EXECUTE FUNCTION f_ekipman_kullanim_kontrol();
-************************STOK - OLUYORMU ************************************************
+
+
+-- ************************ STOK - OLUYORMU ************************
 CREATE OR REPLACE FUNCTION f_stok_dusur() RETURNS TRIGGER AS $$
 DECLARE
     v_mevcut_stok INT;
@@ -151,7 +155,7 @@ BEGIN
     FROM Urunler
     WHERE urun_id = NEW.urun_id;
 
-   
+    
     IF v_mevcut_stok < v_satilacak_adet THEN
         RAISE EXCEPTION 'STOK HATA!!! Ürün (ID: %) için sadece % adet stok kaldı. Satış işlemi engellendi.', 
             NEW.urun_id, v_mevcut_stok;
@@ -166,10 +170,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 ----------------------------------------------------------------------------------
-                -- FONKSIYON 1: VUCUT KITLE INDEKSI HESAPLAMA
+-- FONKSIYON 1: VUCUT KITLE INDEKSI HESAPLAMA
 ----------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION f_bmı_hesabı(f_uye_id INT)
+CREATE OR REPLACE FUNCTION f_bmi_hesabi(f_uye_id INT)
 RETURNS VARCHAR 
 LANGUAGE plpgsql
 AS $$ 
@@ -187,7 +192,7 @@ BEGIN
         RETURN 'OLCUM YOK!!!'; 
     END IF;
 
-   
+    
     v_bmi := v_kilo / (v_boy * v_boy); 
 
     IF v_bmi < 18.5 THEN RETURN 'ZAYIF';
@@ -200,7 +205,7 @@ $$;
 
 
 ----------------------------------------------------------------------------------
-                    -- FONKSIYON 2: KONTENJAN SORGULAMA
+-- FONKSIYON 2: KONTENJAN SORGULAMA
 ----------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION f_boskontenjan(p_program_id INT)
 RETURNS INT 
@@ -208,17 +213,17 @@ LANGUAGE plpgsql
 AS $$ 
 DECLARE
     v_kapasite INT;
-    v_kayıtlı INT;
+    v_kayitli INT;
 BEGIN 
     SELECT kontenjan INTO v_kapasite FROM DersProgrami WHERE program_id = p_program_id;
-    SELECT count(*) INTO v_kayıtlı FROM DersKayitlari WHERE program_id = p_program_id; 
-    RETURN v_kapasite - v_kayıtlı;
+    SELECT count(*) INTO v_kayitli FROM DersKayitlari WHERE program_id = p_program_id; 
+    RETURN v_kapasite - v_kayitli;
 END;
 $$;
 
 
 ----------------------------------------------------------------------------------
-                 -- FONKSIYON 3: BORCLU UYELERI SORGULAMA
+-- FONKSIYON 3: BORCLU UYELERI SORGULAMA
 ----------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION f_BorcluUyeleriGetir(p_limit DECIMAL)
 RETURNS TABLE (uye_id INT, ad VARCHAR, soyad VARCHAR, borc DECIMAL)
@@ -235,7 +240,7 @@ $$;
 
 
 ----------------------------------------------------------------------------------
-                        -- FONKSIYON 4: CIRO HESAPLAMA
+-- FONKSIYON 4: CIRO HESAPLAMA
 ----------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION f_CiroHesapla(
     p_baslangic DATE, 
@@ -267,11 +272,13 @@ BEGIN
     RETURN toplam_aidat + toplam_market;
 END;
 $$;
+
+
 -------------------------------------------------------------------------------------------
-                     --1. SAKLI YORDAM YENİ ÜYE EKLEME
+-- 1. SAKLI YORDAM YENİ ÜYE EKLEME
 ------------------------------------------------------------------------------------------- 
 CREATE OR REPLACE PROCEDURE s_uye_ekle(
-p_ad VARCHAR, 
+    p_ad VARCHAR, 
     p_soyad VARCHAR, 
     p_tc VARCHAR, 
     p_tel VARCHAR, 
@@ -281,14 +288,15 @@ p_ad VARCHAR,
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    INSERT INTO Uyeler (ad, soyad, tc_no, telefon, email, cinsiyet, uyelik_baslangic, aktiflik_durumu) -- uye_ıd  serıal tanımladıgımız ıcın burda yazılmadı oto atıyor zaten.
+    INSERT INTO Uyeler (ad, soyad, tc_no, telefon, email, cinsiyet, uyelik_baslangic, aktiflik_durumu) 
     VALUES (p_ad, p_soyad, p_tc, p_tel, p_email, p_cinsiyet, CURRENT_DATE, TRUE);
 END;
 $$;
--------------------------------------------------------------------------------------------
-                     --2. SAKLI YORDAM  ÜYE SİLME 
--------------------------------------------------------------------------------------------
 
+
+-------------------------------------------------------------------------------------------
+-- 2. SAKLI YORDAM  ÜYE SİLME 
+-------------------------------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE s_uye_sil(p_uye_id INT)
 LANGUAGE plpgsql
 AS $$
@@ -298,7 +306,7 @@ BEGIN
 
     DELETE FROM DersKayitlari WHERE uye_id = p_uye_id;
 
-    DELETE FROM VucutOlcumleri WHERE uye_id = p_uye_id
+    DELETE FROM VucutOlcumleri WHERE uye_id = p_uye_id; -- Düzeltildi: Noktalı virgül eklendi
     DELETE FROM DolapKiralama WHERE uye_id = p_uye_id;
     DELETE FROM Odemeler WHERE uye_id = p_uye_id;
 
@@ -306,11 +314,11 @@ BEGIN
     RAISE NOTICE 'Üye (ID: %) ve tüm geçmişi başarıyla silindi.', p_uye_id;
 END;
 $$;
-     -------------------------------------------------------------------------------------------
-                     --3. SAKLI YORDAM BORCU GECIKENLERI UYELIGINI PASIF YAPMA   
+
+
 -------------------------------------------------------------------------------------------
-    
-    
+-- 3. SAKLI YORDAM BORCU GECIKENLERI UYELIGINI PASIF YAPMA   
+-------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION f_pasiflestir_gecikenleri()
 RETURNS VOID -- Geriye değer döndürmeyecek
 LANGUAGE plpgsql
@@ -318,11 +326,13 @@ AS $$
 BEGIN
     UPDATE Uyeler 
     SET aktiflik_durumu = FALSE
-    WHERE guncel_borc > 0       
+    WHERE guncel_borc > 0        
       AND (CURRENT_DATE - son_odeme_tarihi) > 15;
 END;
 $$;
-****************************************************UYE BILGISI GUNCELLEME*******************************************
+
+
+-- ************************************ UYE BILGISI GUNCELLEME *******************************************
 CREATE OR REPLACE PROCEDURE s_uye_guncelle(
     p_uye_id INT,
     p_yeni_telefon VARCHAR,
@@ -337,17 +347,19 @@ BEGIN
         email = p_yeni_email
     WHERE uye_id = p_uye_id;
     
-       COMMIT;
+    COMMIT;
 END;
 $$;
-************************************UYE ARAMA*****************************************
+
+
+-- ************************************ UYE ARAMA *****************************************
 CREATE OR REPLACE FUNCTION f_uye_ara_tc(p_tc_no CHAR)
 RETURNS TABLE (
     uye_id INT, 
     ad VARCHAR, 
     soyad VARCHAR, 
-    telefon VARCHAR,
-    borc DECIMAL,
+    telefon VARCHAR, 
+    borc DECIMAL, 
     aktif_durum BOOLEAN
 )
 LANGUAGE plpgsql
