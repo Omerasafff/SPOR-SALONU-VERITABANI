@@ -312,16 +312,23 @@ $$;
                      --2. SAKLI YORDAM  ÜYE SİLME 
 -------------------------------------------------------------------------------------------
 
-CREATE OR REPLACE PROCEDURE s_uye_sil(p_uye_id INT )
+CREATE OR REPLACE PROCEDURE s_uye_sil(p_uye_id INT)
 LANGUAGE plpgsql
 AS $$
-BEGIN 
-DELETE FROM derskayitlari WHERE uye_id=p_uye_id;
-DELETE FROM VucutOlcumleri WHERE uye_id = p_uye_id;
+BEGIN
+ 
+    DELETE FROM EkipmanKullanim WHERE uye_id = p_uye_id;
+
+    DELETE FROM DersKayitlari WHERE uye_id = p_uye_id;
+
+    DELETE FROM VucutOlcumleri WHERE uye_id = p_uye_id
     DELETE FROM DolapKiralama WHERE uye_id = p_uye_id;
-     DELETE FROM Uyeler WHERE uye_id = p_uye_id; -- uyenın verıtabanında olan kayıtlarını sılıyoruzkı once hata vermesın sıstem. ılerde lazım olabılır dıye odemelerde veya satıslarda eger bırkaydı varsa ona dokunmuyoruz.
-     END;
-     $$; 
+    DELETE FROM Odemeler WHERE uye_id = p_uye_id;
+
+    DELETE FROM Uyeler WHERE uye_id = p_uye_id;
+    RAISE NOTICE 'Üye (ID: %) ve tüm geçmişi başarıyla silindi.', p_uye_id;
+END;
+$$;
      -------------------------------------------------------------------------------------------
                      --3. SAKLI YORDAM BORCU GECIKENLERI UYELIGINI PASIF YAPMA   
 -------------------------------------------------------------------------------------------
