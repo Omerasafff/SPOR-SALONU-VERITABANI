@@ -114,6 +114,53 @@ CREATE TRIGGER t_PasifUyeEkipmanKullanamaz
 BEFORE INSERT ON EkipmanKullanim
 FOR EACH ROW
 EXECUTE FUNCTION f_PasifUyeEkipmanKullanamaz();
+************************************6. TETIKLEYICI*********************************
+CREATE OR REPLACE FUNCTION f_ekipman_kullanim_kontrol()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_aktif_mi BOOLEAN;
+    v_borc NUMERIC;
+    v_kullanimda_adet INTEGER;
+    v_toplam_adet INTEGER;
+BEGIN
+
+    SELECT aktiflik_durumu, guncel_borc
+    INTO v_aktif_mi, v_borc
+    FROM Uyeler
+    WHERE uye_id = NEW.uye_id;
+
+    IF NOT v_aktif_mi THEN
+        RAISE EXCEPTION 'UYARI: Pasif üyeler ekipman kullanamaz.';
+    END IF;
+
+    IF v_borc > 0 THEN
+        RAISE EXCEPTION 'UYARI: Borcu olan üyeler ekipman kullanamaz. Lütfen borcunuzu ödeyiniz.';
+    END IF;
+
+   
+    SELECT COUNT(*)
+    INTO v_kullanimda_adet
+    FROM EkipmanKullanimi
+    WHERE ekipman_id = NEW.ekipman_id AND bitis_saati IS NULL;
+
+   
+    SELECT adet INTO v_toplam_adet
+    FROM Ekipmanlar
+    WHERE ekipman_id = NEW.ekipman_id;
+
+    
+    IF v_kullanimda_adet >= v_toplam_adet THEN
+        RAISE EXCEPTION 'UYARI: "%" ekipmanının tümü (% adet) şu anda kullanımda. Lütfen bekleyiniz.', 
+            (SELECT ad FROM Ekipmanlar WHERE ekipman_id = NEW.ekipman_id), v_toplam_adet;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER t_ekipman_kullanim_kontrol
+BEFORE INSERT ON EkipmanKullanimi
+FOR EACH ROW
+EXECUTE FUNCTION f_ekipman_kullanim_kontrol();
 
 ----------------------------------------------------------------------------------
                 -- FONKSIYON 1: VUCUT KITLE INDEKSI HESAPLAMA
@@ -253,13 +300,14 @@ DELETE FROM VucutOlcumleri WHERE uye_id = p_uye_id;
 -------------------------------------------------------------------------------------------
     
     
-CREATE OR REPLACE PROCEDURE s_gecıkmısodeme()
+CREATE OR REPLACE FUNCTION f_pasiflestir_gecikenleri()
+RETURNS VOID -- Geriye değer döndürmeyecek
 LANGUAGE plpgsql
 AS $$
 BEGIN
-UPDATE uyeler 
-SET aktiflik_durumu= FALSE --odeme gecıktıyse uyelıgını pasıfe cevırdık.
-WHERE guncel_borc > 0              -- 1. Kural: Borcu olacak
-      AND (CURRENT_DATE - son_odeme_tarihi) > 15; --  Son ödemeden 15 gün geçmişse uygulanacak.
+    UPDATE Uyeler 
+    SET aktiflik_durumu = FALSE
+    WHERE guncel_borc > 0       
+      AND (CURRENT_DATE - son_odeme_tarihi) > 15;
 END;
 $$;
