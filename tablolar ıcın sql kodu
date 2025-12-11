@@ -1,5 +1,5 @@
 SQL TABLONUN KODLARI 
--- 1. KISILER (BASE TABLE)
+-- 1. KISILER
 CREATE TABLE Kisiler (
     kisi_id SERIAL PRIMARY KEY,
     ad VARCHAR(50) NOT NULL,
@@ -28,10 +28,10 @@ CREATE TABLE Personel (
     ise_giris_tarihi DATE DEFAULT CURRENT_DATE
 ) INHERITS (Kisiler);
 
--- 4. VARDIYALAR (DÜZELTİLDİ: TC yerine ID kullanıldı)
+-- 4. VARDIYALAR 
 CREATE TABLE Vardiyalar (
     vardiya_id SERIAL PRIMARY KEY,
-    personel_id INT REFERENCES Personel(personel_id), -- Hata buradaydı, ID'ye çevirdik düzeldi
+    personel_id INT REFERENCES Personel(personel_id), 
     gun VARCHAR(15),
     baslangic_saati TIME,
     bitis_saati TIME
@@ -108,11 +108,11 @@ CREATE TABLE DersTanimlari (
     zorluk_seviyesi VARCHAR(20)
 );
 
--- 13. DERS PROGRAMI (DÜZELTİLDİ: TC yerine ID kullanıldı)
+-- 13. DERS PROGRAMI 
 CREATE TABLE DersProgrami (
     program_id SERIAL PRIMARY KEY,
     ders_tanim_id INT REFERENCES DersTanimlari(ders_tanim_id),
-    egitmen_id INT REFERENCES Personel(personel_id), -- Hata buradaydı, ID'ye çevirdik düzeldi
+    egitmen_id INT REFERENCES Personel(personel_id), 
     gun VARCHAR(15),
     saat TIME,
     kontenjan INT DEFAULT 20
