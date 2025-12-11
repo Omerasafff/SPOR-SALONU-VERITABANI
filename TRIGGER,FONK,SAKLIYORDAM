@@ -50,10 +50,12 @@ EXECUTE FUNCTION f_kontenjan_kontrolu();
 CREATE OR REPLACE FUNCTION f_uye_aktıflestır() RETURNS TRIGGER AS $$
 BEGIN
     UPDATE Uyeler 
-    SET aktiflik_durumu = TRUE ,
-    son_odeme_tarihi= CURRENT_DATE,
-    guncel_borc = guncel_borc - NEW.tutar
+    SET aktiflik_durumu = TRUE,
+        son_odeme_tarihi = CURRENT_DATE,
+        -- DÜZELTME BURADA: Borçtan ödemeyi düş ama 0'ın altına inmesine izin verme!
+        guncel_borc = GREATEST(0, guncel_borc - NEW.tutar)
     WHERE uye_id = NEW.uye_id;
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
