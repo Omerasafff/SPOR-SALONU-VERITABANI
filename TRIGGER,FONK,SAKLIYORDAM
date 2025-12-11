@@ -311,3 +311,48 @@ BEGIN
       AND (CURRENT_DATE - son_odeme_tarihi) > 15;
 END;
 $$;
+****************************************************UYE BILGISI GUNCELLEME*******************************************
+CREATE OR REPLACE PROCEDURE s_uye_guncelle(
+    p_uye_id INT,
+    p_yeni_telefon VARCHAR,
+    p_yeni_email VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- UYELER tablosundaki belirtilen uye_id'ye ait telefon ve email bilgilerini günceller.
+    UPDATE Uyeler 
+    SET telefon = p_yeni_telefon,
+        email = p_yeni_email
+    WHERE uye_id = p_uye_id;
+    
+    -- Değişiklikleri kalıcı hale getirir
+    COMMIT;
+END;
+$$;
+************************************UYE ARAMA*****************************************
+CREATE OR REPLACE FUNCTION f_uye_ara_tc(p_tc_no CHAR)
+RETURNS TABLE (
+    uye_id INT, 
+    ad VARCHAR, 
+    soyad VARCHAR, 
+    telefon VARCHAR,
+    borc DECIMAL,
+    aktif_durum BOOLEAN
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- TC numarasına göre Uyeler tablosunda arama yapar ve sonuçları döndürür
+    RETURN QUERY 
+    SELECT 
+        u.uye_id,
+        u.ad,
+        u.soyad,
+        u.telefon,
+        u.guncel_borc,
+        u.aktiflik_durumu
+    FROM Uyeler u
+    WHERE u.tc_no = p_tc_no;
+END;
+$$;
