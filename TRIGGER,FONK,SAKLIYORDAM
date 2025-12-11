@@ -161,6 +161,31 @@ CREATE TRIGGER t_ekipman_kullanim_kontrol
 BEFORE INSERT ON EkipmanKullanimi
 FOR EACH ROW
 EXECUTE FUNCTION f_ekipman_kullanim_kontrol();
+************************STOK - OLUYORMU ************************************************
+CREATE OR REPLACE FUNCTION f_stok_dusur() RETURNS TRIGGER AS $$
+DECLARE
+    v_mevcut_stok INT;
+    v_satilacak_adet INT := NEW.adet;
+BEGIN
+    -- Mevcut stok adedini alıyoruz
+    SELECT stok_adedi INTO v_mevcut_stok
+    FROM Urunler
+    WHERE urun_id = NEW.urun_id;
+
+    -- Kontrol: Satış sonrası stok eksiye düşecek mi?
+    IF v_mevcut_stok < v_satilacak_adet THEN
+        RAISE EXCEPTION 'STOK HATA!!! Ürün (ID: %) için sadece % adet stok kaldı. Satış işlemi engellendi.', 
+            NEW.urun_id, v_mevcut_stok;
+    END IF;
+
+    -- Stok yeterliyse, güvenli bir şekilde düşürülür.
+    UPDATE Urunler
+    SET stok_adedi = stok_adedi - v_satilacak_adet
+    WHERE urun_id = NEW.urun_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 ----------------------------------------------------------------------------------
                 -- FONKSIYON 1: VUCUT KITLE INDEKSI HESAPLAMA
