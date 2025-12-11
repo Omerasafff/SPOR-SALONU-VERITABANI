@@ -1,0 +1,128 @@
+
+-- KISILER & UYELER (7 Kayıt) - ÖNCE ÜYELER!
+CALL s_uye_ekle('Ahmet', 'Yılmaz', '11111111111', '5321111111', 'ahmet@mail.com', 'E');
+UPDATE Uyeler SET guncel_borc = 50.00, son_odeme_tarihi = CURRENT_DATE - 40 WHERE uye_id = 1;
+CALL s_uye_ekle('Ayşe', 'Kaya', '22222222222', '5322222222', 'ayse@mail.com', 'K');
+CALL s_uye_ekle('Mehmet', 'Can', '33333333333', '5323333333', 'mehmet@mail.com', 'E');
+UPDATE Uyeler SET aktiflik_durumu = FALSE, guncel_borc = 200.00, son_odeme_tarihi = CURRENT_DATE - 60 WHERE uye_id = 3;
+CALL s_uye_ekle('Elif', 'Demir', '44444444444', '5324444444', 'elif@mail.com', 'K');
+CALL s_uye_ekle('Gizem', 'Aydın', '77777777777', '5327777777', 'gizem@mail.com', 'K');
+CALL s_uye_ekle('Caner', 'Kara', '88888888888', '5328888888', 'caner@mail.com', 'E');
+CALL s_uye_ekle('Serap', 'Mert', '00000000000', '5320000000', 'serap@mail.com', 'K');
+
+-- KISILER & PERSONEL (6 Kayıt)
+INSERT INTO Personel (ad, soyad, tc_no, telefon, email, cinsiyet, maas, pozisyon)
+VALUES ('Burak', 'Özkan', '55555555555', '5325555555', 'burak@gym.com', 'E', 15000.00, 'Yoga Eğitmeni'); 
+INSERT INTO Personel (ad, soyad, tc_no, telefon, email, cinsiyet, maas, pozisyon)
+VALUES ('Zeynep', 'Ateş', '66666666666', '5326666666', 'zeynep@gym.com', 'K', 18000.00, 'Fitness Eğitmeni'); 
+INSERT INTO Personel (ad, soyad, tc_no, telefon, email, cinsiyet, maas, pozisyon)
+VALUES ('Deniz', 'Çelik', '99999999999', '5329999999', 'deniz@gym.com', 'E', 12000.00, 'Temizlik'); 
+INSERT INTO Personel (ad, soyad, tc_no, telefon, email, cinsiyet, maas, pozisyon)
+VALUES ('Seda', 'Yıldız', '12345678901', '5321234567', 'seda@gym.com', 'K', 25000.00, 'Yönetici'); 
+INSERT INTO Personel (ad, soyad, tc_no, telefon, email, cinsiyet, maas, pozisyon)
+VALUES ('Murat', 'Ak', '10101010101', '5321010101', 'murat@gym.com', 'E', 16000.00, 'Kişisel Antrenör'); 
+INSERT INTO Personel (ad, soyad, tc_no, telefon, email, cinsiyet, maas, pozisyon)
+VALUES ('Pınar', 'Işık', '20202020202', '5322020202', 'pinar@gym.com', 'K', 14000.00, 'Zumba Eğitmeni'); 
+
+-- UYELIK PAKETLERI (4 Kayıt)
+INSERT INTO UyelikPaketleri (paket_adi, sure_ay, fiyat) VALUES ('Aylık Temel', 1, 400.00);
+INSERT INTO UyelikPaketleri (paket_adi, sure_ay, fiyat) VALUES ('Yıllık Full', 12, 3600.00);
+INSERT INTO UyelikPaketleri (paket_adi, sure_ay, fiyat) VALUES ('Yarım Yıllık Gold', 6, 2000.00);
+INSERT INTO UyelikPaketleri (paket_adi, sure_ay, fiyat) VALUES ('Haftalık Deneme', 0, 150.00);
+
+-- URUNLER (4 Kayıt)
+INSERT INTO Urunler (urun_adi, barkod, satis_fiyati, stok_adedi) VALUES ('Protein Bar', 'B001', 25.00, 50); 
+INSERT INTO Urunler (urun_adi, barkod, satis_fiyati, stok_adedi) VALUES ('Su (0.5L)', 'B002', 10.00, 100); 
+INSERT INTO Urunler (urun_adi, barkod, satis_fiyati, stok_adedi) VALUES ('Havlu', 'B003', 80.00, 30); 
+INSERT INTO Urunler (urun_adi, barkod, satis_fiyati, stok_adedi) VALUES ('Enerji İçeceği', 'B004', 35.00, 40); 
+
+-- EKIPMANLAR (4 Kayıt)
+INSERT INTO Ekipmanlar (ekipman_id, ad, marka, adet, alim_tarihi) VALUES (1, 'Koşu Bandı', 'Techno', 5, '2023-01-15');
+INSERT INTO Ekipmanlar (ekipman_id, ad, marka, adet, alim_tarihi) VALUES (2, 'Ağırlık İstasyonu', 'IronFit', 2, '2023-03-20');
+INSERT INTO Ekipmanlar (ekipman_id, ad, marka, adet, alim_tarihi) VALUES (3, 'Pilates Topu', 'Sporty', 15, '2024-05-10');
+INSERT INTO Ekipmanlar (ekipman_id, ad, marka, adet, alim_tarihi) VALUES (4, 'Kürek Makinesi', 'RowPro', 3, '2024-08-10');
+
+-- DOLAPLAR (4 Kayıt)
+INSERT INTO Dolaplar (dolap_no, konum) VALUES (1, 'Erkek'); 
+INSERT INTO Dolaplar (dolap_no, konum) VALUES (1, 'Kadın'); 
+INSERT INTO Dolaplar (dolap_no, konum) VALUES (2, 'Erkek'); 
+INSERT INTO Dolaplar (dolap_no, konum) VALUES (2, 'Kadın'); 
+
+-- DERS TANIMLARI (3 Kayıt)
+INSERT INTO DersTanimlari (ders_tanim_id, ders_adi, zorluk_seviyesi) VALUES (1, 'Yoga', 'Başlangıç');
+INSERT INTO DersTanimlari (ders_tanim_id, ders_adi, zorluk_seviyesi) VALUES (2, 'Pilates', 'Orta');
+INSERT INTO DersTanimlari (ders_tanim_id, ders_adi, zorluk_seviyesi) VALUES (3, 'Zumba', 'Orta');
+
+-- VARDİYALAR (5 Kayıt)
+INSERT INTO Vardiyalar (personel_id, gun, baslangic_saati, bitis_saati) VALUES (1, 'Pazartesi', '09:00', '13:00');
+INSERT INTO Vardiyalar (personel_id, gun, baslangic_saati, bitis_saati) VALUES (2, 'Salı', '14:00', '18:00');
+INSERT INTO Vardiyalar (personel_id, gun, baslangic_saati, bitis_saati) VALUES (4, 'Pazartesi', '08:00', '16:00');
+INSERT INTO Vardiyalar (personel_id, gun, baslangic_saati, bitis_saati) VALUES (5, 'Perşembe', '12:00', '20:00');
+INSERT INTO Vardiyalar (personel_id, gun, baslangic_saati, bitis_saati) VALUES (6, 'Cuma', '18:00', '22:00');
+
+-- DERS PROGRAMI (4 Kayıt)
+INSERT INTO DersProgrami (ders_tanim_id, egitmen_id, gun, saat, kontenjan) VALUES (1, 1, 'Pazartesi', '10:00:00', 2); 
+INSERT INTO DersProgrami (ders_tanim_id, egitmen_id, gun, saat, kontenjan) VALUES (2, 2, 'Salı', '16:00:00', 10); 
+INSERT INTO DersProgrami (ders_tanim_id, egitmen_id, gun, saat, kontenjan) VALUES (3, 6, 'Cuma', '19:00:00', 15);
+INSERT INTO DersProgrami (ders_tanim_id, egitmen_id, gun, saat, kontenjan) VALUES (1, 1, 'Cumartesi', '11:00:00', 12);
+
+-- ODEMELER (5 Kayıt - t_uye_aktıflestır çalışacak)
+INSERT INTO Odemeler (uye_id, tutar, odeme_turu) VALUES (3, 200.00, 'Nakit'); 
+INSERT INTO Odemeler (uye_id, tutar, odeme_turu) VALUES (2, 400.00, 'Kredi Kartı'); 
+INSERT INTO Odemeler (uye_id, tutar, odeme_turu) VALUES (5, 2000.00, 'Havale'); 
+INSERT INTO Odemeler (uye_id, tutar, odeme_turu) VALUES (1, 3650.00, 'Havale'); 
+INSERT INTO Odemeler (uye_id, tutar, odeme_turu) VALUES (7, 150.00, 'Nakit'); 
+
+-- VUCUT ÖLÇÜMLERİ (5 Kayıt - f_bmı_hesabı Testi)
+INSERT INTO VucutOlcumleri (uye_id, tarih, kilo, boy, yag_orani) VALUES (1, '2025-10-01', 85.0, 1.80, 22.5); 
+INSERT INTO VucutOlcumleri (uye_id, tarih, kilo, boy, yag_orani) VALUES (1, '2025-12-10', 82.0, 1.80, 20.0); 
+INSERT INTO VucutOlcumleri (uye_id, tarih, kilo, boy, yag_orani) VALUES (2, '2025-11-05', 60.0, 1.65, 25.0); 
+INSERT INTO VucutOlcumleri (uye_id, tarih, kilo, boy, yag_orani) VALUES (4, '2025-09-01', 75.0, 1.70, 18.0); 
+INSERT INTO VucutOlcumleri (uye_id, tarih, kilo, boy, yag_orani) VALUES (6, '2025-11-15', 95.0, 1.85, 28.0); 
+
+-- DERS KAYITLARI (5 Kayıt - t_kontenjan_kontrolu çalışacak)
+INSERT INTO DersKayitlari (program_id, uye_id) VALUES (1, 1); 
+INSERT INTO DersKayitlari (program_id, uye_id) VALUES (1, 2); 
+INSERT INTO DersKayitlari (program_id, uye_id) VALUES (2, 4); 
+INSERT INTO DersKayitlari (program_id, uye_id) VALUES (3, 5); 
+INSERT INTO DersKayitlari (program_id, uye_id) VALUES (4, 6); 
+
+-- SATISLAR VE DETAYLAR (3 Fiş, 8 Detay - t_stok_dusur çalışacak)
+INSERT INTO Satislar (uye_id) VALUES (1); 
+INSERT INTO SatisDetaylari (satis_id, urun_id, adet, birim_fiyat) VALUES (1, 1, 2, 25.00); 
+INSERT INTO SatisDetaylari (satis_id, urun_id, adet, birim_fiyat) VALUES (1, 2, 5, 10.00); 
+INSERT INTO Satislar (uye_id) VALUES (4); 
+INSERT INTO SatisDetaylari (satis_id, urun_id, adet, birim_fiyat) VALUES (2, 3, 1, 80.00); 
+INSERT INTO Satislar (uye_id) VALUES (7); 
+INSERT INTO SatisDetaylari (satis_id, urun_id, adet, birim_fiyat) VALUES (3, 4, 2, 35.00); 
+
+-- BAKIM KAYITLARI (3 Kayıt)
+INSERT INTO BakimKayitlari (ekipman_id, bakim_tarihi, aciklama, maliyet) 
+VALUES (1, '2025-11-20', 'Koşu bandı yağlandı.', 150.00);
+INSERT INTO BakimKayitlari (ekipman_id, bakim_tarihi, aciklama, maliyet) 
+VALUES (2, '2025-10-15', 'Ağırlık istasyonu kablo değişimi.', 750.00);
+INSERT INTO BakimKayitlari (ekipman_id, bakim_tarihi, aciklama, maliyet) 
+VALUES (3, '2025-12-01', 'Pilates topları şişirildi.', 50.00);
+
+-- DOLAP KİRALAMA (3 Kayıt)
+INSERT INTO DolapKiralama (uye_id, dolap_id, baslangic_tarihi, bitis_tarihi) VALUES (6, 3, CURRENT_DATE, CURRENT_DATE + 180); 
+INSERT INTO DolapKiralama (uye_id, dolap_id, baslangic_tarihi, bitis_tarihi) VALUES (7, 2, CURRENT_DATE, CURRENT_DATE + 90);
+INSERT INTO DolapKiralama (uye_id, dolap_id, baslangic_tarihi, bitis_tarihi) VALUES (5, 4, CURRENT_DATE, CURRENT_DATE + 30);
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) VALUES (1, 1, CURRENT_TIMESTAMP - INTERVAL '20 minutes');  
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) VALUES (2, 1, CURRENT_TIMESTAMP - INTERVAL '15 minutes');
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) VALUES (4, 1, CURRENT_TIMESTAMP - INTERVAL '10 minutes'); 
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) VALUES (5, 1, CURRENT_TIMESTAMP - INTERVAL '5 minutes');
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) VALUES (6, 1, CURRENT_TIMESTAMP); 
+
+
+-- DİĞER EKİPMANLARA KAYITLAR
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) 
+VALUES (4, 2, CURRENT_TIMESTAMP - INTERVAL '30 minutes'); 
+
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) 
+VALUES (5, 3, CURRENT_TIMESTAMP - INTERVAL '10 minutes');
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) 
+VALUES (6, 3, CURRENT_TIMESTAMP - INTERVAL '5 minutes');
+
+INSERT INTO EkipmanKullanim (uye_id, ekipman_id, baslangic_saati) 
+VALUES (1, 4, CURRENT_TIMESTAMP - INTERVAL '40 minutes');
