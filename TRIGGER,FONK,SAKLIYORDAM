@@ -92,31 +92,7 @@ CREATE TRIGGER t_dersler_cakısıyormu
 BEFORE INSERT ON DersProgrami
 FOR EACH ROW 
 EXECUTE FUNCTION f_dersler_cakısıyormu();
-----------------------------------------------------------------------------------                    -- 5.TETIKLEYICI: EKIPMAN KONTROLU                                         
-----------------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION f_PasifUyeEkipmanKullanamaz()
-RETURNS TRIGGER AS $$
-DECLARE
-    durum BOOLEAN;
-BEGIN
-    
-    SELECT aktiflik_durumu INTO durum 
-    FROM Uyeler 
-    WHERE uye_id = NEW.uye_id;
-
-    
-    IF durum = FALSE THEN
-        RAISE EXCEPTION 'HATA: Üyeliğiniz PASİF durumdadır! Ekipman kullanamazsınız. Lütfen yönetime danışınız.';    
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-CREATE TRIGGER t_PasifUyeEkipmanKullanamaz
-BEFORE INSERT ON EkipmanKullanim
-FOR EACH ROW
-EXECUTE FUNCTION f_PasifUyeEkipmanKullanamaz();
 ************************************6. TETIKLEYICI****************************************************************************************
 CREATE OR REPLACE FUNCTION f_ekipman_kullanim_kontrol()
 RETURNS TRIGGER AS $$
